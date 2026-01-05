@@ -1,78 +1,171 @@
-# KeikoChat
+# 🌸 KeikoChat — Your AI Friend for Calm Conversations
 
-> A laptop-focused, smooth, fluid AI chat + live voice interface.
+KeikoChat is a **text-based AI support chatbot** designed to feel like a friend you can talk to anytime.  
+It's a safe space to **chat, vent, and feel heard** — without judgment, pressure, or accounts.
 
-Built by **[ShrijithSM](https://github.com/ShrijithSM)**.
+KeikoChat is **not a professional mental health service**.  
+It's simply an AI companion that listens, supports, and gently helps you regain emotional balance.
 
-![Status](https://img.shields.io/badge/Status-Active-success)
-![License](https://img.shields.io/badge/License-MIT-blue)
+---
 
-## 🌟 Overview
+## 🎯 Current Stage: Stage 1 - Text-Only MVP
 
-KeikoChat is a production-quality AI voice chat UI designed to feel **calm**, **minimal**, and **buttery smooth**. It mimics the fluidity of modern voice interfaces like Gemini Live and ChatGPT Voice, focusing on a clean laptop-centric experience.
+This is the **minimal working version** of KeikoChat. Voice features will be added in future stages.
 
-### Key Features
+### ✨ Features
 
-- **State-Driven UI**: Strictly follows `IDLE` → `LISTENING` → `THINKING` → `RESPONDING` states for a predictable flow.
-- **Real-Time Visualization**: Custom Canvas-based audio waveform that reacts dynamically to microphone input.
-- **Fluid Motion**: Powered by **Framer Motion** for subtle, non-distracting animations.
-- **Voice First**: Built with the **Web Audio API** and `MediaRecorder` for seamless voice interaction.
+- 💬 **Text-based AI chat** with Gemini API
+- 🧩 **Multiple conversation modes**
+  - Chat (casual, friendly)
+  - Vent (validating, listening)
+  - Support (encouraging, uplifting)
+- 🎭 **Persona-based responses**
+  - Listener (quiet, validating)
+  - Friend (warm, conversational)
+  - Motivator (uplifting, hopeful)
+- 🧠 **Session memory** (last 3 messages)
+- 🌙 **Clean, dark minimal UI**
+- 🔐 **Privacy-first** (no login, no storage)
 
-## 🛠 Tech Stack
+---
 
-- **Frontend**: React (Vite), Tailwind CSS v4, Framer Motion, Lucide React
-- **Backend Ref**: FastAPI
-- **Audio**: Web Audio API, Canvas API
+## 🛠️ Tech Stack
 
-## 🚀 Getting Started
+**Backend**
+
+- Python 3.8+
+- FastAPI
+- Gemini API (free tier)
+- Pydantic
+- Uvicorn
+
+**Frontend**
+
+- React 18
+- Vite
+- Plain CSS (dark theme)
+- Fetch API
+
+---
+
+## 🚀 Setup Instructions
 
 ### Prerequisites
 
-- Node.js (v18+)
-- Python (v3.10+) for backend
+- Python 3.8 or higher
+- Node.js 16 or higher
+- Gemini API key ([Get one here](https://makersuite.google.com/app/apikey))
 
-### Installation
+### Backend Setup
 
-1. **Clone the repository**
+1. **Navigate to backend directory**
 
    ```bash
-   git clone https://github.com/Zentise/KeikoChat.git
-   cd KeikoChat
+   cd backend
    ```
 
-2. **Frontend Setup**
+2. **Create virtual environment**
+
+   ```bash
+   python -m venv venv
+   ```
+
+3. **Activate virtual environment**
+   - Windows:
+
+     ```bash
+     venv\Scripts\activate
+     ```
+
+   - Mac/Linux:
+
+     ```bash
+     source venv/bin/activate
+     ```
+
+4. **Install dependencies**
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+5. **Set up environment variables**
+   - Copy `.env.example` to `.env`
+   - Add your Gemini API key to `.env`:
+
+     ```
+     GEMINI_API_KEY=your_actual_api_key_here
+     ```
+
+6. **Run the backend**
+
+   ```bash
+   uvicorn main:app --reload
+   ```
+
+   Backend will be available at `http://localhost:8000`
+
+### Frontend Setup
+
+1. **Navigate to frontend directory**
 
    ```bash
    cd frontend
+   ```
+
+2. **Install dependencies**
+
+   ```bash
    npm install
+   ```
+
+3. **Run the development server**
+
+   ```bash
    npm run dev
    ```
 
-   The frontend will run on `http://localhost:5173`.
+   Frontend will be available at `http://localhost:5173`
 
-3. **Backend Setup** (If applicable)
-   Navigate to the backend directory and follow standard Python/FastAPI setup (e.g., `uvicorn main:app --reload`).
+### Usage
 
-## 📂 Project Structure
-
-```
-/frontend
- ├─ src/
- │   ├─ components/
- │   │   ├─ ChatArea.jsx       // Message list & layout
- │   │   ├─ Message.jsx        // Bubble component with motion
- │   │   ├─ VoiceControl.jsx   // Interactive Mic button
- │   │   ├─ Waveform.jsx       // Canvas audio visualizer
- │   ├─ hooks/
- │   │   ├─ useChat.js         // Chat logic & state machine
- │   │   ├─ useVoiceRecorder.js // Audio capture & analysis
- │   ├─ services/              // API integration
- │   └─ App.jsx                // Main Application
-```
-
-## 🔗 Repository
-
-[https://github.com/Zentise/KeikoChat](https://github.com/Zentise/KeikoChat)
+1. Make sure both backend and frontend are running
+2. Open `http://localhost:5173` in your browser
+3. Select a mode (Chat/Vent/Support) and persona (Listener/Friend/Motivator)
+4. Start chatting with Keiko!
 
 ---
-*Created with ❤️ by ShrijithSM*
+
+## 🔐 Privacy & Safety
+
+- No accounts or logins required
+- No permanent chat storage
+- Session memory only (last 3 messages)
+- KeikoChat does **not** provide medical or professional mental health advice
+
+> If you're feeling unsafe or overwhelmed, please reach out to a trusted person or a qualified professional.
+
+---
+
+## 🌱 Roadmap
+
+See [Stages.md](Stages.md) for the complete development roadmap.
+
+**Upcoming Stages:**
+
+- Stage 2: Enhanced emotional modes and personas
+- Stage 3: Voice input (STT)
+- Stage 4: Voice output (TTS)
+- Stage 5: Real-time voice chat
+- Stage 6: Safety, memory & polish
+
+---
+
+## 📄 License
+
+MIT License
+
+---
+
+> Built with care, calm, and curiosity 🌙  
+> KeikoChat — sometimes, all you need is someone to listen.
