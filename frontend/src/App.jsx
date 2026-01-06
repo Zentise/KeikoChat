@@ -305,10 +305,8 @@ function App() {
     setIsLoading(true)
 
     try {
-      // Use environment variable for API URL with localhost fallback
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"
-
-      const response = await fetch(`${API_BASE_URL}/chat`, {
+      const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiBase}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
