@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import './App.css'
 
 // Voice conversation states
@@ -27,7 +28,7 @@ function App() {
   const messagesEndRef = useRef(null)
   const recognitionRef = useRef(null)
   const utteranceRef = useRef(null)
-  const isListeningRef = useRef(false) // Ref to track listening state inside event handlers
+  const isListeningRef = useRef(false)
 
   // Auto-scroll to bottom when new messages arrive
   const scrollToBottom = () => {
@@ -72,20 +73,15 @@ function App() {
         setIsListening(false)
         setVoiceState(VOICE_STATES.IDLE)
       } else if (event.error === 'no-speech') {
-        // Just stay listening/idle? usually best to stop and let user try again if silent
-        // But for continuous mode maybe we ignore?
-        // Let's reset to be safe so user sees they need to click again
         setIsListening(false)
         setVoiceState(VOICE_STATES.IDLE)
       } else {
-        // Other errors
         setIsListening(false)
         setVoiceState(VOICE_STATES.IDLE)
       }
     }
 
     recognition.onend = () => {
-      // Use ref to check if we intended to keep listening
       if (isListeningRef.current) {
         try {
           recognition.start()
@@ -95,7 +91,6 @@ function App() {
           setVoiceState(VOICE_STATES.IDLE)
         }
       } else {
-        // Intentionally stopped
         setVoiceState(VOICE_STATES.IDLE)
       }
     }
@@ -111,15 +106,15 @@ function App() {
   const getStateDisplay = () => {
     switch (voiceState) {
       case VOICE_STATES.IDLE:
-        return { text: 'Ready to listen', color: 'var(--text-secondary)' }
+        return { text: 'Ready to listen', color: 'rgba(125, 211, 252, 0.5)' }
       case VOICE_STATES.LISTENING:
-        return { text: 'Listening...', color: 'var(--accent)' }
+        return { text: 'Listening...', color: '#7dd3fc' }
       case VOICE_STATES.THINKING:
-        return { text: 'Thinking...', color: 'var(--accent)' }
+        return { text: 'Thinking...', color: '#38bdf8' }
       case VOICE_STATES.SPEAKING:
-        return { text: 'Keiko is speaking...', color: 'var(--accent)' }
+        return { text: 'Keiko is speaking...', color: '#7dd3fc' }
       default:
-        return { text: '', color: 'var(--text-secondary)' }
+        return { text: '', color: 'rgba(125, 211, 252, 0.5)' }
     }
   }
 
@@ -152,7 +147,7 @@ function App() {
       setIsListening(false)
       setVoiceState(VOICE_STATES.IDLE)
     } else {
-      if (voiceState !== VOICE_STATES.IDLE) return // Prevent starting in wrong state
+      if (voiceState !== VOICE_STATES.IDLE) return
 
       setError(null)
       setInputMessage('')
@@ -166,7 +161,6 @@ function App() {
       }
     }
   }
-
 
   // Initialize TTS and check support
   useEffect(() => {
@@ -186,7 +180,6 @@ function App() {
       return
     }
 
-    // Stop any ongoing speech when toggling off
     if (voiceEnabled && window.speechSynthesis) {
       window.speechSynthesis.cancel()
     }
@@ -200,16 +193,14 @@ function App() {
       return
     }
 
-    // Cancel any ongoing speech
     window.speechSynthesis.cancel()
 
     const utterance = new SpeechSynthesisUtterance(text)
-    utterance.rate = 0.9  // Slightly slower for calm delivery
+    utterance.rate = 0.9
     utterance.pitch = 1.0
     utterance.volume = 1.0
     utterance.lang = 'en-US'
 
-    // Try to select a natural female voice
     const voices = window.speechSynthesis.getVoices()
     const preferredVoice = voices.find(v =>
       v.name.includes('Female') ||
@@ -221,7 +212,6 @@ function App() {
       utterance.voice = preferredVoice
     }
 
-    // Voice state callbacks
     utterance.onstart = () => {
       setVoiceState(VOICE_STATES.SPEAKING)
     }
@@ -243,7 +233,6 @@ function App() {
     if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1]
       if (lastMessage.role === 'assistant') {
-        // Small delay to ensure message is rendered
         setTimeout(() => {
           speakText(lastMessage.content)
         }, 100)
@@ -254,12 +243,10 @@ function App() {
   // Keyboard controls for voice
   useEffect(() => {
     const handleKeyPress = (e) => {
-      // Space to toggle mic (only when not typing in input)
       if (e.code === 'Space' && e.target.tagName !== 'INPUT' && voiceState === VOICE_STATES.IDLE) {
         e.preventDefault()
         toggleListening()
       }
-      // Escape to stop everything
       if (e.code === 'Escape') {
         if (window.speechSynthesis) {
           window.speechSynthesis.cancel()
@@ -275,13 +262,11 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyPress)
   }, [voiceState])
 
-
   const sendMessage = async (e) => {
     e.preventDefault()
 
     if (!inputMessage.trim() || isLoading) return
 
-    // Stop recording AND speaking when message is sent
     if (isListening) {
       recognitionRef.current?.stop()
       setIsListening(false)
@@ -294,9 +279,8 @@ function App() {
     const userMessage = inputMessage.trim()
     setInputMessage('')
     setError(null)
-    setVoiceState(VOICE_STATES.THINKING) // Set thinking state while waiting for AI
+    setVoiceState(VOICE_STATES.THINKING)
 
-    // Add user message to chat
     setMessages(prev => [...prev, {
       role: 'user',
       content: userMessage
@@ -325,7 +309,6 @@ function App() {
 
       const data = await response.json()
 
-      // Add AI response to chat
       setMessages(prev => [...prev, {
         role: 'assistant',
         content: data.response
@@ -339,26 +322,92 @@ function App() {
     }
   }
 
+  // Framer Motion variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        duration: 1,
+        ease: 'easeOut'
+      }
+    }
+  }
+
+  const messageVariants = {
+    hidden: {
+      opacity: 0,
+      y: 20,
+      scale: 0.95
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        duration: 0.8,
+        ease: 'easeOut'
+      }
+    }
+  }
+
+  const micButtonVariants = {
+    idle: {
+      scale: 1,
+    },
+    listening: {
+      scale: [1, 1.05, 1],
+      transition: {
+        duration: 3,
+        repeat: Infinity,
+        ease: 'easeInOut'
+      }
+    },
+    hover: {
+      scale: 1.05,
+      transition: {
+        duration: 0.3
+      }
+    }
+  }
+
   return (
     <div className="app">
-      <div className="chat-container">
+      <motion.div
+        className="chat-container"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         {/* Header */}
-        <header className="chat-header">
+        <motion.header
+          className="chat-header"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+        >
           <h1>🌙 KeikoChat</h1>
           <p className="subtitle">Your supportive AI companion</p>
           {ttsSupported && (
-            <button
+            <motion.button
               className="voice-toggle"
               onClick={toggleVoice}
               title={voiceEnabled ? "Disable voice" : "Enable voice"}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               {voiceEnabled ? '🔊' : '🔇'}
-            </button>
+            </motion.button>
           )}
-        </header>
+        </motion.header>
 
         {/* Controls */}
-        <div className="controls">
+        <motion.div
+          className="controls"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+        >
           <div className="control-group">
             <label htmlFor="mode">What do you need?</label>
             <select
@@ -386,25 +435,36 @@ function App() {
               <option value="motivator">✨ Motivator — Encouraging & hopeful</option>
             </select>
           </div>
-        </div>
+        </motion.div>
 
         {/* Voice State Indicator */}
-        {speechSupported && voiceEnabled && (
-          <div
-            className={`voice-state-indicator ${voiceState}`}
-            style={{ color: getStateDisplay().color }}
-          >
-            {getStateDisplay().text}
-          </div>
-        )}
+        <AnimatePresence>
+          {speechSupported && voiceEnabled && (
+            <motion.div
+              className={`voice-state-indicator ${voiceState}`}
+              style={{ color: getStateDisplay().color }}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              {getStateDisplay().text}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Messages */}
         <div className="messages">
           {messages.length === 0 && (
-            <div className="welcome-message">
+            <motion.div
+              className="welcome-message"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 0.6 }}
+            >
               <p>👋 Hi! I'm Keiko.</p>
               <p>I'm here to listen, support, and chat with you.</p>
-              <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+              <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: 'rgba(125, 211, 252, 0.5)' }}>
                 Choose what you need above — whether you want to chat casually,
                 vent your feelings, or get some support. Then pick how you'd like
                 me to respond.
@@ -415,41 +475,65 @@ function App() {
                   For professional help, please reach out to a mental health professional.
                 </small>
               </p>
-            </div>
+            </motion.div>
           )}
 
-          {messages.map((msg, index) => (
-            <div
-              key={index}
-              className={`message ${msg.role}`}
-            >
-              <div className="message-content">
-                {msg.content}
-              </div>
-            </div>
-          ))}
+          <AnimatePresence>
+            {messages.map((msg, index) => (
+              <motion.div
+                key={index}
+                className={`message ${msg.role}`}
+                variants={messageVariants}
+                initial="hidden"
+                animate="visible"
+                exit={{ opacity: 0, scale: 0.95 }}
+              >
+                <div className="message-content">
+                  {msg.content}
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
 
           {isLoading && (
-            <div className="message assistant">
+            <motion.div
+              className="message assistant"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
               <div className="message-content loading">
                 <span className="dot"></span>
                 <span className="dot"></span>
                 <span className="dot"></span>
               </div>
-            </div>
+            </motion.div>
           )}
 
-          {error && (
-            <div className="error-message">
-              {error}
-            </div>
-          )}
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                className="error-message"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.4 }}
+              >
+                {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <div ref={messagesEndRef} />
         </div>
 
         {/* Input */}
-        <form className="input-container" onSubmit={sendMessage}>
+        <motion.form
+          className="input-container"
+          onSubmit={sendMessage}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.5 }}
+        >
           <input
             type="text"
             value={inputMessage}
@@ -459,30 +543,36 @@ function App() {
             maxLength={2000}
           />
           {speechSupported && (
-            <button
+            <motion.button
               type="button"
               className={`mic-button ${voiceState === VOICE_STATES.LISTENING ? 'listening' : ''} ${voiceState === VOICE_STATES.THINKING ? 'disabled' : ''}`}
               onClick={toggleListening}
               disabled={isLoading || voiceState === VOICE_STATES.THINKING}
               title={voiceState === VOICE_STATES.SPEAKING ? "Click to interrupt" : isListening ? "Stop recording" : "Start voice input"}
+              variants={micButtonVariants}
+              animate={isListening ? 'listening' : 'idle'}
+              whileHover={!isListening && voiceState === VOICE_STATES.IDLE ? 'hover' : {}}
+              whileTap={{ scale: 0.95 }}
             >
               {isListening ? '⏹️' : '🎤'}
-            </button>
+            </motion.button>
           )}
-          <button
+          <motion.button
             type="submit"
             disabled={isLoading || !inputMessage.trim()}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
             Send
-          </button>
-        </form>
+          </motion.button>
+        </motion.form>
 
         {/* Safety Disclaimer */}
         <div className="disclaimer">
           KeikoChat is an AI companion, not a human or professional service.
           Conversations are not saved permanently.
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }
