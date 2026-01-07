@@ -4,6 +4,7 @@ Gemini API client with prompt engineering and session memory
 import os
 from typing import List, Dict
 import google.generativeai as genai
+from groq import Groq
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -20,6 +21,12 @@ class GeminiClient:
         
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel('gemini-2.5-flash')
+        
+        # Initialize Groq client for fallback
+        self.groq_api_key = os.getenv("GROQ_API_KEY")
+        self.groq_client = None
+        if self.groq_api_key:
+            self.groq_client = Groq(api_key=self.groq_api_key)
         
         # In-memory session storage: {session_id: [messages]}
         self.sessions: Dict[str, List[Dict[str, str]]] = {}
@@ -170,6 +177,44 @@ PERSONA: Gentle Motivator
                 "You are not alone, and there is help available."
             )
         return None
+
+    def _generate_with_groq(
+        self, 
+        system_prompt: str, 
+        session_id: str, 
+        message: str
+    ) -> str:
+        """Fallback generation using Groq API"""
+        if not self.groq_client:
+            raise Exception("Groq API key not configured")
+            
+        # Build messages list for Groq
+        messages = [{"role": "system", "content": system_prompt}]
+        
+        # Add history
+        if session_id in self.sessions:
+            for pair in self.sessions[session_id][-5:]: # Keep last 5
+                messages.append({"role": "user", "content": pair['user']})
+                messages.append({"role": "assistant", "content": pair['assistant']})
+                
+        # Add current message
+        messages.append({"role": "user", "content": message})
+        
+        try:
+            completion = self.groq_client.chat.completions.create(
+                model="llama-3.1-70b-versatile",
+                messages=messages,
+                temperature=0.7,
+                max_tokens=1024,
+                top_p=1,
+                stream=False,
+                stop=None,
+            )
+            return completion.choices[0].message.content
+        except Exception as e:
+            print(f"Groq generation error: {e}")
+            raise e
+    
     
     async def generate_response(
         self, 
@@ -195,8 +240,14 @@ PERSONA: Gentle Motivator
             response = self.model.generate_content(full_prompt)
             assistant_message = response.text.strip()
         except Exception as e:
-            # Fallback for safety block or API error
-            assistant_message = "I'm having trouble thinking clearly right now. Could we try talking about something else?"
+            print(f"Gemini API error: {e}. Attempting fallback to Groq...")
+            try:
+                # Fallback to Groq
+                assistant_message = self._generate_with_groq(system_prompt, session_id, message)
+            except Exception as groq_error:
+                print(f"Groq fallback failed: {groq_error}")
+                # Fallback for safety block or API error
+                assistant_message = "I'm having trouble thinking clearly right now. Could we try talking about something else?"
 
         # 4. Update session memory
         self._update_session(session_id, message, assistant_message)
